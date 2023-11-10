@@ -25,8 +25,8 @@ const limiter = rateLimit({
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://payment-frontend-l.vercel.app/"],
-  credentials: true, //access-control-allow-credentials:true
+  origin: ["*"],
+  credentials: true,
   optionSuccessStatus: 200,
 };
 // Global variable appRoot with base dirname
