@@ -23,23 +23,30 @@ const userController = {
       });
 
       if (user) {
-        // Update the user's bank details
+        // Create a new bank account and associated wallet
         const updatedUser = await prisma.user.update({
           where: { id: userId },
           data: {
-            AccountNumber: accountNumber,
-            bank: bankName,
-            AccountHolderName: accountHolderName,
-            IFSC: IFSCcode,
-            mpin: mpin,
+            bankAccounts: {
+              create: {
+                bankName: bankName,
+                accountNumber,
+                accountHolderName,
+                ifsc: IFSCcode,
+                mpin,
+                wallet: {
+                  create: {
+                    balance: 100000.0,
+                  },
+                },
+              },
+            },
+          },
+          include: {
+            bankAccounts: true,
           },
         });
-        await prisma.wallet.create({
-          data: {
-            userId,
-            balance: 100000.0,
-          },
-        });
+
         // You can send a response or handle success here
         res.status(200).json({
           success: true,

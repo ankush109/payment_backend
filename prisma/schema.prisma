@@ -27,6 +27,7 @@ model BankAccount {
   id                String @id @default(cuid())
   accountNumber     String
   accountHolderName String
+  bankName          String
   ifsc              String
   mpin              String
   userId            String
