@@ -14,6 +14,7 @@ CREATE TABLE "BankAccount" (
     "id" TEXT NOT NULL,
     "accountNumber" TEXT NOT NULL,
     "accountHolderName" TEXT NOT NULL,
+    "bankName" TEXT NOT NULL,
     "ifsc" TEXT NOT NULL,
     "mpin" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
