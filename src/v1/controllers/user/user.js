@@ -11,8 +11,14 @@ const prisma = new PrismaClient();
 const userController = {
   async fillBankDetails(req, res, next) {
     try {
-      const { mpin, accountNumber, bankName, IFSCcode, accountHolderName } =
-        req.body;
+      const {
+        phoneNumber,
+        mpin,
+        accountNumber,
+        bankName,
+        IFSCcode,
+        accountHolderName,
+      } = req.body;
       const userId = req.user.id;
 
       // Check if the user exists
@@ -23,27 +29,35 @@ const userController = {
       });
 
       if (user) {
-        // Create a new bank account and associated wallet
-        const updatedUser = await prisma.user.update({
-          where: { id: userId },
+        console.log(user, "user");
+        // Create a new wallet for the user
+        const createdWallet = await prisma.wallet.create({
           data: {
-            bankAccounts: {
-              create: {
-                bankName: bankName,
-                accountNumber,
-                accountHolderName,
-                ifsc: IFSCcode,
-                mpin,
-                wallet: {
-                  create: {
-                    balance: 100000.0,
-                  },
-                },
+            userId,
+            balance: 100000.0,
+          },
+        });
+        console.log(createdWallet);
+        // Create a new bank account associated with the created wallet
+        const createdBankAccount = await prisma.bankAccount.create({
+          data: {
+            bankName,
+            accountNumber,
+            phoneNumber,
+            accountHolderName,
+            ifsc: IFSCcode,
+            mpin,
+
+            wallet: {
+              connect: {
+                id: createdWallet.id,
               },
             },
-          },
-          include: {
-            bankAccounts: true,
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
           },
         });
 
@@ -51,7 +65,10 @@ const userController = {
         res.status(200).json({
           success: true,
           message: "Bank details updated successfully",
-          user: updatedUser,
+          user: {
+            ...user,
+            bankAccounts: [createdBankAccount],
+          },
         });
       } else {
         // Handle the case where the user does not exist
@@ -59,10 +76,10 @@ const userController = {
       }
     } catch (err) {
       // Handle any errors that occur during the process
-      console.error(err);
+      console.error(err, "s");
       res.status(500).json({
         success: false,
-        error: "An error occurred while updating bank details",
+        error: err,
       });
     } finally {
       // Close the Prisma client connection
@@ -78,7 +95,11 @@ const userController = {
           id: req.user.id,
         },
         include: {
-          wallet: true,
+          bankAccounts: {
+            include: {
+              wallet: true,
+            },
+          },
         },
       });
       // console.log(user.mpin, "user");
@@ -91,15 +112,16 @@ const userController = {
   async getUserByPhoneNumber(req, res, next) {
     try {
       console.log(req.params.id);
-      const user = await prisma.user.findFirst({
+      const bankAccount = await prisma.bankAccount.findFirst({
         where: {
-          phonenumber: req.query.phonenumber,
+          phoneNumber: req.query.phonenumber,
         },
       });
-      if (user) {
-        console.log(user, "user");
+
+      if (bankAccount) {
+        console.log(bankAccount, "user");
         res.status(200).json({
-          message: user,
+          message: bankAccount,
           success: true,
         });
       } else {
@@ -119,14 +141,21 @@ const userController = {
     try {
       const {
         receiverPhoneNumber,
+        senderPhonenumber,
+        senderWalletId,
         amount,
         description,
         currency,
+        receiverWalletId,
         paymentMethod,
       } = req.body;
       const user = await prisma.user.findFirst({
         where: {
-          phonenumber: receiverPhoneNumber,
+          wallet: {
+            some: {
+              id: receiverWalletId,
+            },
+          },
         },
       });
       let receiverId;
@@ -135,24 +164,22 @@ const userController = {
       } else {
         return res.status(404).json({ message: "Receiver not found" });
       }
-      const sender = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        select: {
-          wallet: true,
+      const sender = await prisma.wallet.findUnique({
+        where: {
+          id: senderWalletId,
         },
       });
-      const receiver = await prisma.user.findUnique({
-        where: { id: receiverId },
-        select: {
-          wallet: true,
+      const receiver = await prisma.wallet.findUnique({
+        where: {
+          id: receiverWalletId,
         },
       });
 
       if (!receiver) {
         return res.status(404).json({ message: "Receiver not found" });
       }
-
-      if (sender.wallet[0].balance < amount) {
+      console.log(sender, "sender");
+      if (sender.balance < amount) {
         return res.status(400).json({ message: "Insufficient balance" });
       }
 
@@ -163,6 +190,8 @@ const userController = {
       const transaction = await prisma.transaction.create({
         data: {
           senderId: req.user.id,
+          recieverPhoneNumber: receiverPhoneNumber,
+          senderPhoneNumber: senderPhonenumber,
           receiverId,
           amount: amount, // Deduct amount from sender
           timestamp,
@@ -174,12 +203,12 @@ const userController = {
       });
 
       // Update sender's and receiver's wallet balances
-      const updatedSenderBalance = sender.wallet[0].balance - amount;
-      const updatedReceiverBalance = receiver.wallet[0].balance + amount;
+      const updatedSenderBalance = sender.balance - amount;
+      const updatedReceiverBalance = receiver.balance + amount;
 
       await prisma.wallet.update({
         where: {
-          id: sender.wallet[0].id,
+          id: sender.id,
         },
         data: {
           balance: updatedSenderBalance,
@@ -188,7 +217,7 @@ const userController = {
 
       await prisma.wallet.update({
         where: {
-          id: receiver.wallet[0].id,
+          id: receiver.id,
         },
         data: {
           balance: updatedReceiverBalance,

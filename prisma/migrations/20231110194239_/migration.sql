@@ -18,6 +18,7 @@ CREATE TABLE "BankAccount" (
     "ifsc" TEXT NOT NULL,
     "mpin" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
     "walletId" TEXT NOT NULL,
 
     CONSTRAINT "BankAccount_pkey" PRIMARY KEY ("id")
@@ -37,6 +38,8 @@ CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
     "receiverId" TEXT NOT NULL,
+    "senderPhoneNumber" TEXT NOT NULL,
+    "recieverPhoneNumber" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL,
     "status" TEXT NOT NULL,
@@ -62,6 +65,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phonenumber_key" ON "User"("phonenumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BankAccount_phoneNumber_key" ON "BankAccount"("phoneNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BankAccount_walletId_key" ON "BankAccount"("walletId");
