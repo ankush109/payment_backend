@@ -33,7 +33,7 @@ const corsOptions = {
 global.appRoot = path.resolve(__dirname);
 
 // Middlewares
-app.use(cors(corsOption));
+app.use(cors(corsOptions));
 app.use(helmet());
 app.set("trust proxy", 1);
 app.use(limiter);
