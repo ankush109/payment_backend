@@ -3,15 +3,23 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "bank" TEXT,
-    "AccountNumber" TEXT,
-    "AccountHolderName" TEXT,
-    "IFSC" TEXT,
-    "mpin" TEXT,
-    "password" TEXT NOT NULL,
     "phonenumber" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BankAccount" (
+    "id" TEXT NOT NULL,
+    "accountNumber" TEXT NOT NULL,
+    "accountHolderName" TEXT NOT NULL,
+    "ifsc" TEXT NOT NULL,
+    "mpin" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "walletId" TEXT NOT NULL,
+
+    CONSTRAINT "BankAccount_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -53,6 +61,15 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phonenumber_key" ON "User"("phonenumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BankAccount_walletId_key" ON "BankAccount"("walletId");
+
+-- AddForeignKey
+ALTER TABLE "BankAccount" ADD CONSTRAINT "BankAccount_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BankAccount" ADD CONSTRAINT "BankAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
