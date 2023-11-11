@@ -102,6 +102,7 @@ const userController = {
           },
         },
       });
+      console.log(user, "user");
       // console.log(user.mpin, "user");
       res.json(customResponse(200, user));
     } catch (err) {
