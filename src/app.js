@@ -25,7 +25,7 @@ const limiter = rateLimit({
 const app = express();
 
 const corsOptions = {
-  origin: [process.env.FRONTEND_URL,"https://payment-frontend-t31c.vercel.app","http://localhost:3000"],
+  origin: [process.env.FRONTEND_URL,"https://payment-frontend-atlw.vercel.app","http://localhost:3000"],
   credentials: true,
   optionSuccessStatus: 200,
 };
